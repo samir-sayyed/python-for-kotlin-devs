@@ -14,6 +14,26 @@ fun greet() = println("Hi, $name")       def greet(): print(f"Hi, {name}")
 
 ---
 
+## 🎮 Play & read it in the browser
+
+This repo ships two interactive pages so you can learn while having fun:
+
+- **[🎮 Translation Game](https://samir-sayyed.github.io/python-for-kotlin-devs/quiz.html)** — 16 rounds: see a Kotlin snippet, pick the idiomatic Python. Score, streaks, 3 lives, and the gotcha explained after every answer.
+- **[🏠 Landing hub](https://samir-sayyed.github.io/python-for-kotlin-devs/)** — jump into the game or the guide.
+
+**Run it locally** (no build step, no dependencies):
+
+```bash
+git clone https://github.com/samir-sayyed/python-for-kotlin-devs.git
+cd python-for-kotlin-devs
+python3 -m http.server 8000
+# then open http://localhost:8000 in your browser
+```
+
+The pages are plain self-contained `index.html` / `quiz.html` — open them straight from disk too, or edit the `QUESTIONS` array in `quiz.html` to add your own rounds.
+
+---
+
 ## The one-paragraph culture shock
 
 Kotlin protects you at **compile time**. Python protects you at **runtime, if at all**. There is no compiler yelling before you run. `null` isn't a special citizen — it's just `None`, an ordinary object. Types are hints, not laws. This feels terrifying for a week, then liberating: no build step, a REPL that runs anything, and libraries for everything. The trade you're making is **safety for speed-of-iteration**. Learn to lean on tests and type hints to buy back the safety you gave up.
