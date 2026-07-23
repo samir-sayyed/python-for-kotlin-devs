@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kotlin → Python: Translation Game</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2430; --border:#30363d;
+    --text:#e6edf3; --muted:#8b949e; --kotlin:#a970ff; --python:#ffd43b;
+    --green:#3fb950; --red:#f85149; --accent:#58a6ff;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:radial-gradient(1200px 600px at 50% -10%,#12283a 0%,var(--bg) 60%);
+    color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;
+    padding:24px 16px;
+  }
+  a{color:var(--accent);text-decoration:none}
+  .wrap{width:100%;max-width:720px}
+  header{text-align:center;margin-bottom:20px}
+  h1{margin:0;font-size:1.7rem}
+  h1 .k{color:var(--kotlin)} h1 .p{color:var(--python)}
+  .sub{color:var(--muted);margin-top:6px;font-size:.95rem}
+  .bar{
+    display:flex;gap:12px;justify-content:center;margin:18px 0;flex-wrap:wrap;
+  }
+  .stat{background:var(--panel);border:1px solid var(--border);border-radius:10px;
+    padding:8px 14px;font-size:.9rem;min-width:92px;text-align:center}
+  .stat b{display:block;font-size:1.3rem;margin-top:2px}
+  .progress{height:8px;background:var(--panel2);border-radius:99px;overflow:hidden;margin:8px 0 22px}
+  .progress > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--kotlin),var(--python));transition:width .4s}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:22px}
+  .qnum{color:var(--muted);font-size:.8rem;letter-spacing:.05em;text-transform:uppercase}
+  .prompt{margin:10px 0 4px;font-size:1.05rem;line-height:1.5}
+  pre{background:#0b0f14;border:1px solid var(--border);border-radius:10px;padding:14px 16px;
+    overflow-x:auto;margin:14px 0;font-size:.95rem}
+  code{font-family:"SF Mono",Menlo,Consolas,monospace}
+  .opts{display:grid;gap:10px;margin-top:8px}
+  .opt{
+    text-align:left;background:var(--panel2);border:1px solid var(--border);color:var(--text);
+    border-radius:10px;padding:12px 14px;cursor:pointer;font-size:.95rem;font-family:inherit;
+    transition:transform .06s,border-color .15s,background .15s;
+  }
+  .opt code{color:#c9d1d9}
+  .opt:hover:not(:disabled){border-color:var(--accent);transform:translateY(-1px)}
+  .opt:disabled{cursor:default}
+  .opt.correct{border-color:var(--green);background:rgba(63,185,80,.14)}
+  .opt.wrong{border-color:var(--red);background:rgba(248,81,73,.14)}
+  .explain{margin-top:16px;padding:14px 16px;border-radius:10px;background:var(--panel2);
+    border-left:3px solid var(--python);font-size:.92rem;line-height:1.55;display:none}
+  .explain.show{display:block}
+  .explain b{color:var(--python)}
+  .next{margin-top:16px;width:100%;padding:13px;border:0;border-radius:10px;cursor:pointer;
+    font-size:1rem;font-weight:600;background:var(--accent);color:#04121f;display:none}
+  .next.show{display:block}
+  .end{text-align:center;padding:12px}
+  .end .score{font-size:3rem;font-weight:800;background:linear-gradient(90deg,var(--kotlin),var(--python));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .end p{color:var(--muted)}
+  .btn{display:inline-block;margin:6px;padding:12px 22px;border-radius:10px;border:1px solid var(--border);
+    background:var(--panel2);color:var(--text);cursor:pointer;font-size:1rem;font-family:inherit}
+  .btn.primary{background:var(--python);color:#1a1500;border-color:var(--python);font-weight:600}
+  footer{margin-top:26px;color:var(--muted);font-size:.85rem;text-align:center}
+  .streakfire{color:var(--python)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><span class="k">Kotlin</span> → <span class="p">Python</span> Translation Game</h1>
+    <div class="sub">Guess the idiomatic Python for each Kotlin snippet. Learn the gotcha either way.</div>
+  </header>
+
+  <div class="bar">
+    <div class="stat">Score<b id="score">0</b></div>
+    <div class="stat">Streak<b id="streak">0</b></div>
+    <div class="stat">Lives<b id="lives">❤️❤️❤️</b></div>
+  </div>
+  <div class="progress"><i id="progbar"></i></div>
+
+  <div id="game"></div>
+
+  <footer>
+    Part of <a href="index.html">Python for Kotlin Developers</a> ·
+    <a href="README.md">the full guide</a>
+  </footer>
+</div>
+
+<script>
+const QUESTIONS = [
+  {
+    prompt:"Kotlin's immutable variable — what's the Python equivalent?",
+    code:'val MAX = 3',
+    opts:['val MAX = 3','const MAX = 3','MAX = 3  # convention only','let MAX = 3'],
+    answer:2,
+    explain:"Python has <b>no <code>val</code></b>. Nothing is truly immutable at the variable level — you use <code>SCREAMING_CASE</code> and a promise. The compiler won't stop reassignment; your teammates will."
+  },
+  {
+    prompt:"Translate this null-safe access:",
+    code:'val len = name?.length ?: 0',
+    opts:['len = name?.length ?: 0','len = len(name) if name is not None else 0','len = name.length or 0','len = name?.len() ?? 0'],
+    answer:1,
+    explain:"There's no <code>?.</code> or <code>?:</code> in Python. <code>None</code> can appear anywhere, so you defend explicitly with <code>if x is not None</code>."
+  },
+  {
+    prompt:'How do you write Kotlin\'s <code>"Hi $name"</code> template?',
+    code:'val s = "Hi $name, age ${age+1}"',
+    opts:['s = "Hi $name, age ${age+1}"','s = "Hi {name}, age {age+1}"','s = f"Hi {name}, age {age+1}"','s = "Hi %s" % name'],
+    answer:2,
+    explain:"f-strings are Kotlin's <code>$</code>/<code>${}</code> templates — just prefix the string with <b>f</b>. Forgetting the <code>f</code> prints the literal <code>{name}</code>, a classic bug."
+  },
+  {
+    prompt:"Which default-argument version is CORRECT in Python?",
+    code:'// Kotlin: fun f(items: MutableList<Int> = mutableListOf())',
+    opts:['def f(items=[]):','def f(items=None):\\n    if items is None: items = []','def f(items=mutableListOf()):','def f(items: List = new()):'],
+    answer:1,
+    explain:"<b>Never use a mutable default</b> like <code>items=[]</code> — Python creates ONE list shared across every call. The <code>None</code>-guard idiom is the fix. This is the #1 Python footgun."
+  },
+  {
+    prompt:"Turn this Kotlin chain into idiomatic Python:",
+    code:'list.map { it * 2 }',
+    opts:['list.map { it * 2 }','[x * 2 for x in list]','map(list) { it * 2 }','list.map(x => x * 2)'],
+    answer:1,
+    explain:"Kotlin's <code>.map{}</code>/<code>.filter{}</code> chains become <b>comprehensions</b>: <code>[expr for item in iterable if cond]</code>. There's no <code>it</code> — you name the loop variable."
+  },
+  {
+    prompt:"Kotlin's <code>data class</code> maps to which Python decorator?",
+    code:'data class User(val name: String, val age: Int = 0)',
+    opts:['@data class User','@dataclass\\nclass User:','class User(data):','record User(name, age)'],
+    answer:1,
+    explain:"<code>@dataclass</code> generates <code>__init__</code>, <code>__repr__</code>, and <code>__eq__</code> for free — just like Kotlin generates <code>equals</code>/<code>hashCode</code>/<code>toString</code>. Use <code>@dataclass(frozen=True)</code> for a val-only version."
+  },
+  {
+    prompt:"What replaces Kotlin's <code>this</code> inside a Python method?",
+    code:'class Counter { fun inc() { count++ } }',
+    opts:['this.count += 1','count += 1','self.count += 1  (self is explicit)','me.count += 1'],
+    answer:2,
+    explain:"<code>self</code> is Kotlin's <code>this</code>, but you must write it <b>explicitly</b> — as the first method parameter AND every time you touch a field. Forgetting <code>self.</code> is the #1 Kotlin-dev mistake."
+  },
+  {
+    prompt:"Careful! Which is the SAFE translation of the elvis operator here?",
+    code:'val n = count ?: 10   // count could be 0',
+    opts:['n = count or 10','n = count if count is not None else 10','n = count ?: 10','n = count ?? 10'],
+    answer:1,
+    explain:"<code>x or 10</code> looks like <code>?:</code> but fires on ANY falsy value — <code>0</code>, <code>\"\"</code>, <code>[]</code>. Since <code>count</code> could be <code>0</code>, you must write the explicit <code>is not None</code> form."
+  },
+  {
+    prompt:"What's the limitation of a Python <code>lambda</code> vs a Kotlin block lambda?",
+    code:'val f = { x: Int -> println(x); x * x }',
+    opts:['No limitation — lambdas can be multi-line','A lambda is ONE expression only — no statements','Lambdas need a return type','Lambdas cannot take arguments'],
+    answer:1,
+    explain:"Python <code>lambda</code>s are a <b>single expression</b> — no multi-line bodies, no statements like <code>print</code> then return. Need more? Define a real <code>def</code>. Python nudges you toward named functions."
+  },
+  {
+    prompt:"Kotlin's <code>suspend fun</code> becomes:",
+    code:'suspend fun fetch(): String',
+    opts:['suspend def fetch() -> str','async def fetch() -> str','def fetch() suspend:','await def fetch():'],
+    answer:1,
+    explain:"<code>suspend fun</code> → <code>async def</code>, <code>.await()</code> → <code>await</code>, <code>awaitAll</code> → <code>asyncio.gather(...)</code>, and <code>runBlocking</code> → <code>asyncio.run(...)</code>."
+  },
+  {
+    prompt:"You have CPU-bound work. Why won't more coroutines / threads help in Python?",
+    code:'// Kotlin: Dispatchers.Default gives real parallelism',
+    opts:['Python has no threads','The GIL prevents parallel CPU — use multiprocessing','asyncio is slow','You must use Kotlin for CPU work'],
+    answer:1,
+    explain:"Python has <b>one event loop</b> and the <b>GIL</b> means threads don't run CPU code in parallel. <code>async</code> is for I/O concurrency; for CPU-bound work reach for <code>multiprocessing</code>."
+  },
+  {
+    prompt:"Kotlin culture says 'check first'. What's the Pythonic style here?",
+    code:'if (map.containsKey(k)) v = map[k] else v = default',
+    opts:['Same — check with `in` first (LBYL)','try: v = d[k] / except KeyError: v = default (EAFP)','Python has no exceptions','Use map?.get(k)'],
+    answer:1,
+    explain:"Python favors <b>EAFP</b> — \"Easier to Ask Forgiveness than Permission.\" Just <code>try</code> it and catch the <code>KeyError</code>. This is idiomatic, not a code smell. (Bonus: <code>d.get(k, default)</code> also works.)"
+  },
+  {
+    prompt:"Kotlin extension function → what's the Pythonic equivalent?",
+    code:'fun String.shout() = uppercase() + "!"',
+    opts:['String.shout = lambda: ...','def shout(s): return s.upper()+"!"  (plain function)','extend str with shout()','monkey-patch str (preferred)'],
+    answer:1,
+    explain:"Python has no clean extension functions. The culture prefers a <b>plain module-level function</b>: <code>shout(x)</code> over <code>x.shout()</code>. Monkey-patching built-ins is possible but frowned upon."
+  },
+  {
+    prompt:"Kotlin's nullable type <code>User?</code> as a Python type hint:",
+    code:'val user: User? = null',
+    opts:['user: User? = None','user: Nullable[User] = None','user: User | None = None','user: ?User = None'],
+    answer:2,
+    explain:"Use <code>User | None</code> (or <code>Optional[User]</code>). Type hints are optional and unenforced at runtime, but <b>mypy</b>/<b>pyright</b> give you Kotlin-grade checking. Use them from day one."
+  },
+  {
+    prompt:"Kotlin's <code>mapOf(\"a\" to 1)</code> becomes:",
+    code:'val m = mapOf("a" to 1, "b" to 2)',
+    opts:['m = mapOf("a" to 1, "b" to 2)','m = {"a": 1, "b": 2}','m = ["a": 1, "b": 2]','m = dict("a"=1, "b"=2)'],
+    answer:1,
+    explain:"A dict literal uses <code>{key: value}</code>. Sets use <code>{1, 2}</code>, lists use <code>[1, 2]</code>. Look up with a default via <code>m.get(\"a\", 0)</code> — your elvis-on-a-map replacement."
+  },
+  {
+    prompt:"What is Python's equivalent of <code>fun main()</code> as an entry point?",
+    code:'fun main() { app.run() }',
+    opts:['fun main(): app.run()','public static void main()','if __name__ == "__main__":\\n    main()','@main def main():'],
+    answer:2,
+    explain:"<code>if __name__ == \"__main__\":</code> means \"run this only when the file is executed directly, not imported.\" It's Python's <code>fun main()</code> — you'll type it in your sleep within a week."
+  },
+];
+
+let i=0, score=0, streak=0, lives=3, answered=false;
+const $ = id => document.getElementById(id);
+
+function render(){
+  if(lives<=0 || i>=QUESTIONS.length){ return end(); }
+  answered=false;
+  const q=QUESTIONS[i];
+  $('progbar').style.width = (i/QUESTIONS.length*100)+'%';
+  $('game').innerHTML = `
+    <div class="card">
+      <div class="qnum">Question ${i+1} / ${QUESTIONS.length}</div>
+      <div class="prompt">${q.prompt}</div>
+      <pre><code>${esc(q.code)}</code></pre>
+      <div class="opts" id="opts"></div>
+      <div class="explain" id="explain"><b>Why:</b> ${q.explain}</div>
+      <button class="next" id="next">Next →</button>
+    </div>`;
+  const opts=$('opts');
+  q.opts.forEach((o,idx)=>{
+    const b=document.createElement('button');
+    b.className='opt'; b.innerHTML=`<code>${esc(o)}</code>`;
+    b.onclick=()=>choose(idx,b);
+    opts.appendChild(b);
+  });
+  $('next').onclick=()=>{ i++; render(); };
+}
+
+function choose(idx,btn){
+  if(answered) return; answered=true;
+  const q=QUESTIONS[i];
+  const buttons=[...document.querySelectorAll('.opt')];
+  buttons.forEach(b=>b.disabled=true);
+  buttons[q.answer].classList.add('correct');
+  if(idx===q.answer){
+    score+=10; streak++; if(streak>1) score+=streak; // streak bonus
+    $('score').textContent=score;
+  }else{
+    btn.classList.add('wrong');
+    streak=0; lives--;
+    $('lives').textContent='❤️'.repeat(lives)||'💀';
+  }
+  $('streak').textContent = streak + (streak>=3?' 🔥':'');
+  $('streak').className = streak>=3?'streakfire':'';
+  $('explain').classList.add('show');
+  $('next').classList.add('show');
+  $('next').textContent = (i+1>=QUESTIONS.length||lives<=0)?'See results →':'Next →';
+}
+
+function end(){
+  $('progbar').style.width='100%';
+  const max=QUESTIONS.length;
+  const done=Math.min(i,max);
+  let msg = lives<=0 ? "Out of lives! The compiler isn't here to save you anymore. 😅"
+          : score>=max*10 ? "Flawless. You think in Python now. 🐍"
+          : score>=max*7 ? "Strong translation instincts. Ship it. 🚀"
+          : "Solid start — re-read the gotchas and run it back. 📚";
+  $('game').innerHTML=`
+    <div class="card end">
+      <div class="score">${score}</div>
+      <p>${done} of ${max} answered · best streak kept you sharp</p>
+      <p>${msg}</p>
+      <button class="btn primary" onclick="restart()">Play again</button>
+      <a class="btn" href="README.md">Read the guide</a>
+    </div>`;
+}
+function restart(){ i=0;score=0;streak=0;lives=3;
+  $('score').textContent=0;$('streak').textContent=0;$('streak').className='';
+  $('lives').textContent='❤️❤️❤️'; render(); }
+
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\\n/g,'\n');}
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python for Kotlin Developers</title>
+<style>
+  :root{
+    --bg:#0d1117;--panel:#161b22;--panel2:#1c2430;--border:#30363d;
+    --text:#e6edf3;--muted:#8b949e;--kotlin:#a970ff;--python:#ffd43b;--accent:#58a6ff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:radial-gradient(1200px 700px at 50% -15%,#12283a 0%,var(--bg) 55%);
+    color:var(--text);min-height:100vh;padding:48px 18px;}
+  a{color:var(--accent);text-decoration:none}
+  .wrap{max-width:760px;margin:0 auto}
+  .hero{text-align:center;margin-bottom:40px}
+  .logo{font-size:3.5rem}
+  h1{font-size:2.2rem;margin:.3em 0 .1em}
+  h1 .k{color:var(--kotlin)} h1 .p{color:var(--python)}
+  .tag{color:var(--muted);font-size:1.05rem;max-width:520px;margin:8px auto 0;line-height:1.5}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px}
+  @media(max-width:560px){.cards{grid-template-columns:1fr}}
+  .cta{display:block;background:var(--panel);border:1px solid var(--border);border-radius:16px;
+    padding:24px;transition:transform .12s,border-color .15s;color:var(--text)}
+  .cta:hover{transform:translateY(-3px);border-color:var(--accent)}
+  .cta .ico{font-size:2rem}
+  .cta h3{margin:10px 0 6px;font-size:1.25rem}
+  .cta p{margin:0;color:var(--muted);font-size:.92rem;line-height:1.5}
+  .cta.game{background:linear-gradient(160deg,rgba(169,112,255,.12),rgba(255,212,59,.12)),var(--panel)}
+  .snippet{margin:40px 0 10px;background:var(--panel);border:1px solid var(--border);border-radius:14px;
+    overflow:hidden}
+  .snippet .head{padding:10px 16px;border-bottom:1px solid var(--border);color:var(--muted);font-size:.82rem;
+    display:flex;gap:8px;align-items:center}
+  .dot{width:11px;height:11px;border-radius:50%;display:inline-block}
+  .snippet pre{margin:0;padding:18px;overflow-x:auto;font-size:.9rem;line-height:1.6;
+    font-family:"SF Mono",Menlo,Consolas,monospace}
+  .cmt{color:#6a737d} .kw{color:var(--kotlin)} .pw{color:var(--python)}
+  footer{text-align:center;color:var(--muted);font-size:.85rem;margin-top:44px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="logo">🐍</div>
+    <h1><span class="k">Python</span> for <span class="p">Kotlin</span> Developers</h1>
+    <p class="tag">You already think in types, null-safety, and coroutines.
+    This translates what you know — instead of teaching you to code from zero.</p>
+  </div>
+
+  <div class="cards">
+    <a class="cta game" href="quiz.html">
+      <div class="ico">🎮</div>
+      <h3>Play the Translation Game</h3>
+      <p>16 rounds. See a Kotlin snippet, pick the idiomatic Python. Streaks, lives, and the gotcha explained every time.</p>
+    </a>
+    <a class="cta" href="README.md">
+      <div class="ico">📖</div>
+      <h3>Read the Guide</h3>
+      <p>17 side-by-side sections, a cheat sheet, "Kotlin habit → Python reality", and a 7-day learning plan.</p>
+    </a>
+  </div>
+
+  <div class="snippet">
+    <div class="head">
+      <span class="dot" style="background:#f85149"></span>
+      <span class="dot" style="background:#e3b341"></span>
+      <span class="dot" style="background:#3fb950"></span>
+      &nbsp; the whole idea, in six lines
+    </div>
+<pre><span class="cmt">// Kotlin</span>                          <span class="cmt"># Python</span>
+<span class="kw">val</span> name: String? = null            name = None
+name?.length ?: 0                len(name) <span class="kw">if</span> name <span class="kw">is not</span> None <span class="kw">else</span> 0
+<span class="kw">data class</span> User(...)             <span class="pw">@dataclass</span>
+<span class="kw">suspend fun</span> fetch()             <span class="pw">async def</span> fetch()
+list.map { it * 2 }              [x * 2 <span class="kw">for</span> x <span class="kw">in</span> list]
+</pre>
+  </div>
+
+  <footer>
+    Open source on <a href="https://github.com/samir-sayyed/python-for-kotlin-devs">GitHub</a>
+    · built for Kotlin devs who'd rather play than skim
+  </footer>
+</div>
+</body>
+</html>
